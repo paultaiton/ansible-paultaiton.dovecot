@@ -1,0 +1,9 @@
+protocol lmtp {
+}
+service lmtp {
+	user = {{ mailbox_userid }}
+	inet_listener lmtp {
+		address = ::1 127.0.0.1
+		port = 24
+	}
+}

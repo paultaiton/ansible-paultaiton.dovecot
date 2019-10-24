@@ -1,0 +1,33 @@
+---
+# handlers file for paultaiton.dovecot
+
+- name: default csr gen
+  openssl_csr:
+    path: /etc/pki/dovecot/certs/dovecot.csr
+    privatekey_path: /etc/pki/dovecot/private/dovecot.pem
+    common_name: "{{ dovecot_default_hostname }}"
+    organization_name: "{{ dovecot_default_hostname  }}"
+  notify: default self-sign
+    
+- name: default self-sign
+  openssl_certificate:
+    path: /etc/pki/dovecot/certs/dovecot.pem
+    privatekey_path: /etc/pki/dovecot/private/dovecot.pem
+    csr_path: /etc/pki/dovecot/certs/dovecot.csr
+    provider: selfsigned
+    backup: yes
+
+- name: alternate self sign
+  openssl_certificate:
+    path:  "{{ item.filename | regex_replace('.csr$', '.pem') }}"
+    privatekey_path: /etc/pki/dovecot/private/dovecot.pem
+    csr_path: "{{ item.filename }}"
+    provider: selfsigned
+    backup: yes
+    force: no
+  loop: "{{ new_alternate_CSRs.results }}"
+
+- name: restart Dovecot
+  service:
+    name: dovecot
+    state: restarted

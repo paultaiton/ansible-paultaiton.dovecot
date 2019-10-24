@@ -1,0 +1,8 @@
+---
+# defaults file for paultaiton.dovecot
+dovecot_default_hostname: example.com
+dovecot_hostnames:
+  - example.com
+mailbox_userid : "vmail"
+mailbox_groupid : "vmail"
+submission_relay_port : "587"

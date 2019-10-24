@@ -1,0 +1,92 @@
+---
+# tasks file for paultaiton.dovecot
+- name : Install Dovecot and requisite Packages
+  dnf :
+    name: 
+      - dovecot
+      - python3-cryptography
+      - python3-policycoreutils
+    state: present
+  notify: restart Dovecot
+
+- name: dovecot service enable
+  service:
+    name: dovecot
+    enabled: yes
+
+- name : Create vmail user
+  user :
+    name : vmail
+    password_lock : yes
+    state : present
+    create_home: yes
+
+- name : Copy dovecot templates
+  template :
+    src: "{{ item }}.j2"
+    dest: "/etc/dovecot/{{ item }}"
+  loop : 
+    - conf.d/10-ssl.conf
+    - conf.d/20-submission.conf
+    - conf.d/10-auth.conf
+    - conf.d/10-mail.conf
+    - conf.d/20-lmtp.conf
+    - conf.d/auth-system.conf.ext
+    - dovecot.conf
+  notify : restart Dovecot
+
+- name : Copy dovecot passwd file
+  template :
+    src: "passwd.j2"
+    dest: "/etc/dovecot/passwd"
+
+- name : Configure firewall to allow imap/imaps and submission services
+  firewalld:
+    service: "{{ item }}"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  loop:
+    - imap
+    - imaps
+    - smtp-submission
+
+- name : Configure firewall to allow lmtp services
+  firewalld:
+    port: 24/tcp
+    permanent: yes
+    immediate: yes
+    state: enabled
+
+- name: Allow Dovecot to listen on tcp port 587 (Selinux)
+  seport:
+    ports: 587
+    proto: tcp
+    setype: pop_port_t 
+    state: present
+
+- name: Generate openssl private key
+  openssl_privatekey:
+    path: /etc/pki/dovecot/private/dovecot.pem
+    backup: yes
+    group: root
+    owner: root
+    mode: 0600
+    setype: dovecot_cert_t
+  notify: default csr gen
+
+- name: Generate openssl DH parameters
+  openssl_dhparam:
+    path: /etc/pki/dovecot/dh.pem
+    force: no
+    backup: no
+
+- name: Generate openssl CSRs
+  openssl_csr:
+    path: "/etc/pki/dovecot/certs/dovecot-{{ item }}.csr"
+    privatekey_path: /etc/pki/dovecot/private/dovecot.pem
+    common_name: "{{ item }}"
+    organization_name: "{{ item }}"
+  loop: "{{ dovecot_hostnames }}"
+  register: new_alternate_CSRs
+  notify: alternate self sign

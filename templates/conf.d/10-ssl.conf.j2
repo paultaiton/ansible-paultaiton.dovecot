@@ -1,0 +1,15 @@
+ssl = required
+disable_plaintext_auth = yes
+ssl_cert = </etc/pki/dovecot/certs/dovecot.pem
+ssl_key = </etc/pki/dovecot/private/dovecot.pem
+ssl_dh = </etc/pki/dovecot/dh.pem
+ssl_client_ca_file = /etc/pki/tls/cert.pem
+
+
+{% for hostname in dovecot_hostnames %}
+local_name {{ hostname }} {
+	ssl_cert = </etc/pki/dovecot/certs/dovecot-{{ hostname }}.pem
+	ssl_key = </etc/pki/dovecot/private/dovecot.pem
+}
+
+{% endfor %}
