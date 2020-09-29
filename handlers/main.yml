@@ -8,7 +8,7 @@
     common_name: "{{ dovecot_default_hostname }}"
     organization_name: "{{ dovecot_default_hostname  }}"
   notify: default self-sign
-    
+
 - name: default self-sign
   openssl_certificate:
     path: /etc/pki/dovecot/certs/dovecot.pem

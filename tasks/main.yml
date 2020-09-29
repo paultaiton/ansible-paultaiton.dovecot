@@ -2,7 +2,7 @@
 # tasks file for paultaiton.dovecot
 - name : Install Dovecot and requisite Packages
   dnf :
-    name: 
+    name:
       - dovecot
       - python3-cryptography
       - python3-policycoreutils
@@ -25,7 +25,7 @@
   template :
     src: "{{ item }}.j2"
     dest: "/etc/dovecot/{{ item }}"
-  loop : 
+  loop :
     - conf.d/10-ssl.conf
     - conf.d/20-submission.conf
     - conf.d/10-auth.conf
@@ -62,7 +62,7 @@
   seport:
     ports: 587
     proto: tcp
-    setype: pop_port_t 
+    setype: pop_port_t
     state: present
 
 - name: Generate openssl private key
